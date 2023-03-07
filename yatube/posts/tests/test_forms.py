@@ -8,18 +8,9 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Comment, Group, Post, User
-from .const import (
-    AUTHOR,
-    COMMENT_TEXT,
-    GROUP_DESCRIPTION,
-    GROUP_DESCRIPTION_2,
-    GROUP_SLUG,
-    GROUP_SLUG_2,
-    GROUP_TITLE,
-    GROUP_TITLE_2,
-    ONE,
-    POST_TEXT,
-)
+from .const import (AUTHOR, COMMENT_TEXT, GROUP_DESCRIPTION,
+                    GROUP_DESCRIPTION_2, GROUP_SLUG, GROUP_SLUG_2, GROUP_TITLE,
+                    GROUP_TITLE_2, ONE, POST_TEXT)
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
