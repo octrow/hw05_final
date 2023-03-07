@@ -1,9 +1,9 @@
 {% if user.is_authenticated %}
-{% load active_link_tags %}
+  {% load active_link_tags %}
   <div class="row my-3">
     <ul class="nav nav-tabs">
       <li class="nav-item">
-        <a 
+        <a
           class="nav-link {% active_link 'posts:index' %}"
           href="{% url 'posts:index' %}"
         >
@@ -11,9 +11,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a 
-           class="nav-link {% active_link 'posts:follow_index' %}"
-           href="{% url 'posts:follow_index' %}"
+        <a
+          class="nav-link {% active_link 'posts:follow_index' %}"
+          href="{% url 'posts:follow_index' %}"
         >
           Избранные авторы
         </a>

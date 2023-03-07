@@ -14,10 +14,10 @@
         <div class="container py-2">
             <div class="row" data-masonry='{"percentPosition": true }'>
                 {% for post in page_obj %}
-                {% include 'posts/includes/post_card.html' with group_link_flag=True %}
+                    {% include 'posts/includes/post_card.html' with group_link_flag=True %}
                 {% endfor %}
                 {% include 'posts/includes/paginator.html' %}
-            {% endblock %}
-        </div>
-    </div>
+{% endblock %}
+</div>
+</div>
 </div>
