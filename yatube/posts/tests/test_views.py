@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -273,3 +274,11 @@ class FollowingTest(TestCase):
         )
         response = self.anotheruser_client.get(reverse("posts:follow_index"))
         self.assertEqual(len(response.context["page_obj"]), 0)
+
+    def test_dont_follow_self(self):
+        user = User.objects.create_user('user')
+        author = User.objects.create_user('author')
+
+        Follow.objects.create(user=user, author=author)
+        with self.assertRaises(IntegrityError):
+            Follow.objects.create(user=user, author=author)

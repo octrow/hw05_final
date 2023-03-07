@@ -1,6 +1,7 @@
-from core.models import CreatedModel
 from django.contrib.auth import get_user_model
 from django.db import models
+
+from core.models import CreatedModel
 
 User = get_user_model()
 
@@ -90,7 +91,15 @@ class Follow(models.Model):
     class Meta:
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
-        unique_together = ("user", "author")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(user=models.F("user")),
+                name="нельзя подписаться на себя",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "author"], name="unique_follow"
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user} подписался на {self.author}"

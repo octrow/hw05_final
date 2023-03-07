@@ -26,9 +26,9 @@
                 {% include 'posts/includes/post_card.html' %}
                 <!-- Не используем <hr> из-за собственной сетки постов -->
                 {% endfor %}
+                {% endcache %}
                 {% include 'posts/includes/paginator.html' %}
             </div>
         </div>
     </div>
-    {% endcache %}
 {% endblock %}
