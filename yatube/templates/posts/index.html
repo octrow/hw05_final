@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Последние обновления на сайте{% endblock %}
+{% block content %}
+{% load cache %}
+    {% cache 20 index_page %}
+    <section class="jumbotron text-center">
+        <div class="container">
+            <h1 class="jumbotron-heading">Welcome to YaTube!</h1>
+            <p class="lead text-muted">
+                Присоединяйтесь к нашему сообществу единомышленников и воплощайте свои
+                идеи в жизнь, создавая мощные, динамичные веб-приложения.
+            </p>
+            <p>
+                <a href="https://docs.djangoproject.com/en/2.2/"
+                    class="btn btn-primary my-2">Django 2.2 documentation</a>
+                <a href="https://practicum.yandex.ru/backend-developer/"
+                    class="btn btn-secondary my-2">Яндекс.Практикум</a>
+            </p>
+        </div>
+    </section>
+    {% include 'posts/includes/switcher.html' %}
+    <div class="album py-5 bg-light">
+        <div class="container py-2">
+            <div class="row" data-masonry='{"percentPosition": true }'>
+                {% for post in page_obj %}
+                {% include 'posts/includes/post_card.html' %}
+                <!-- Не используем <hr> из-за собственной сетки постов -->
+                {% endfor %}
+                {% include 'posts/includes/paginator.html' %}
+            </div>
+        </div>
+    </div>
+    {% endcache %}
+{% endblock %}
