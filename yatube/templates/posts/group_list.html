@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Записи сообщества {{ group.title }}{% endblock %}
 {% block content %}
-    <section class="page-header">
-        <div class="container py-2">
+  <section class="page-header">
+    <div class="container py-2">
             <!-- обход pytest 
              <h1>{{ group.title }}</h1> 
              -->
-            <h1 class="jumbotron-heading">Группа «{{ group.title }}»</h1>
-            <p class="lead text-muted">{{ group.description|linebreaks }}</p>
-        </div>
-    </section>
-    <div class="album py-1 bg-light">
-        <div class="container py-2">
-            <div class="row" data-masonry='{"percentPosition": true }'>
-                {% for post in page_obj %}
-                    {% include 'posts/includes/post_card.html' with group_link_flag=True %}
-                {% endfor %}
-                {% include 'posts/includes/paginator.html' %}
+      <h1 class="jumbotron-heading">Группа «{{ group.title }}»</h1>
+      <p class="lead text-muted">{{ group.description|linebreaks }}</p>
+    </div>
+  </section>
+  <div class="album py-1 bg-light">
+    <div class="container py-2">
+      <div class="row" data-masonry='{"percentPosition": true }'>
+        {% for post in page_obj %}
+          {% include 'posts/includes/post_card.html' with group_link_flag=True %}
+        {% endfor %}
+        {% include 'posts/includes/paginator.html' %}
 {% endblock %}
 </div>
 </div>

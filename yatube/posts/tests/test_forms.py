@@ -43,7 +43,6 @@ class PostCreateFormTests(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
-        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -95,8 +94,6 @@ class PostCreateFormTests(TestCase):
         count_comments = Comment.objects.count()
         form_data = {
             "text": COMMENT_TEXT,
-            "author": self.user.id,
-            "post": self.post.id,
         }
         response = self.authorized_client.post(
             reverse("posts:add_comment", args=(self.post.id,)),
@@ -104,12 +101,32 @@ class PostCreateFormTests(TestCase):
             follow=True,
         )
         comment = Comment.objects.first()
-        self.assertRedirects(
-            response, reverse("posts:post_detail", args=(form_data["post"],))
-        )
-        self.assertEqual(comment.text, form_data["text"])
-        self.assertEqual(comment.author.id, form_data["author"])
         self.assertEqual(count_comments + ONE, Comment.objects.count())
+        self.assertEqual(comment.id, ONE)
+        self.assertEqual(comment.text, form_data["text"])
+        self.assertEqual(comment.author, self.user)
+        self.assertEqual(comment.post, self.post)
+        self.assertRedirects(
+            response, reverse("posts:post_detail", args=(self.post.id,))
+        )
+
+    def test_create_comment_not_authorizet(self):
+        """Форма не создает комментарий в указанном посте
+        для анонима."""
+        count_comments = Comment.objects.count()
+        redirect_url = f"/auth/login/?next=/posts/{self.post.pk}/comment/"
+        response = self.client.post(
+            reverse("posts:add_comment", args=(self.post.id,)),
+            data={"text": COMMENT_TEXT + "Not Authorizet"},
+            follow=True,
+        )
+        self.assertEqual(count_comments, Comment.objects.count())
+        self.assertFalse(
+            Comment.objects.filter(
+                text=COMMENT_TEXT + "Not Authorizet"
+            ).exists()
+        )
+        self.assertRedirects(response, redirect_url)
 
     def test_edit_post_correct(self):
         posts_count = Post.objects.count()
@@ -140,7 +157,7 @@ class PostCreateFormTests(TestCase):
             "text": POST_TEXT,
             "group": self.group.id,
         }
-        self.guest_client.post(
+        self.client.post(
             reverse("posts:post_create"), data=form_data, follow=True
         )
         self.assertEqual(Post.objects.count(), posts_count)
@@ -151,7 +168,7 @@ class PostCreateFormTests(TestCase):
             "text": POST_TEXT + "невозможный",
             "group": self.group_2.id,
         }
-        self.guest_client.post(
+        self.client.post(
             reverse("posts:post_edit", args=[ONE]),
             data=form_data,
             follow=True,

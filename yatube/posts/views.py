@@ -28,9 +28,9 @@ def group_posts(request, slug):
 
 def profile(request, username):
     author = get_object_or_404(User, username=username)
-    following = request.user.is_authenticated and Follow.objects.filter(
-        user=request.user, author=author
-    )
+    following = (
+        request.user.is_authenticated and request.user != author
+    ) and author.following.filter(user=request.user).exists()
     posts = author.posts.select_related("group")
     post_count = posts.count()
     page_obj = paginate_posts(posts, request)
@@ -39,27 +39,25 @@ def profile(request, username):
         "page_obj": page_obj,
         "post_count": post_count,
         "following": following,
+        "followers_count": author.follower.count(),
+        "following_count": author.following.count(),
     }
     return render(request, "posts/profile.html", context)
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(
+        Post.objects.select_related("author").prefetch_related(
+            "comments__author"
+        ),
+        id=post_id,
+    )
     context = {
         "post": post,
         "comments": post.comments.select_related("author"),
         "comment_form": CommentForm(),
     }
     return render(request, "posts/post_detail.html", context)
-
-
-@login_required
-def post_delete(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
-    if post.author != request.user:
-        return redirect("post_detail", post_id=post_id)
-    post.delete()
-    return redirect("index")
 
 
 @login_required
@@ -137,7 +135,7 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    Follow.objects.filter(
-        user=request.user, author__username=username
+    get_object_or_404(
+        Follow, user=request.user, author__username=username
     ).delete()
     return redirect("posts:profile", username=username)

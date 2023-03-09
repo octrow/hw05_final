@@ -48,6 +48,27 @@ class StaticURLTests(TestCase):
                 (self.post.id,),
                 f"/posts/{self.post.id}/edit/",
             ),
+            (
+                "posts:post_delete",
+                (self.post.id,),
+                f"/posts/{self.post.id}/delete/",
+            ),
+            ("posts:follow_index", None, "/follow/"),
+            (
+                "posts:profile_follow",
+                (self.anotheruser.username,),
+                f"/profile/{self.anotheruser.username}/follow/",
+            ),
+            (
+                "posts:profile_unfollow",
+                (self.anotheruser.username,),
+                f"/profile/{self.anotheruser.username}/unfollow/",
+            ),
+            (
+                "posts:add_comment",
+                (self.post.id,),
+                f"/posts/{self.post.id}/comment/",
+            ),
         )
 
     def test_direct_urls_equal_reverse_urls(self):
@@ -65,6 +86,7 @@ class StaticURLTests(TestCase):
             ("posts:post_detail", (self.post.id,), "posts/post_detail.html"),
             ("posts:post_create", None, "posts/create_post.html"),
             ("posts:post_edit", (self.post.id,), "posts/create_post.html"),
+            ("posts:follow_index", None, "posts/follow.html"),
         )
         for reverse_url, argument, template in templates_url_names:
             with self.subTest(template=template):
@@ -80,31 +102,87 @@ class StaticURLTests(TestCase):
 
     def test_all_urls_access_author(self):
         """Все URL-адреса доступны для авторизованного автора пользователя."""
-        for reverse_url, argument, _ in self.urls_names:
+        names_list = [
+            "posts:post_delete",
+            "posts:add_comment",
+            "posts:profile_follow",
+            "posts:profile_unfollow",
+        ]
+        for reverse_url, argument, _ in self.urls_names[:-1]:
             with self.subTest(reverse_url=reverse_url):
                 response = self.authorized_client.get(
                     reverse(reverse_url, args=argument)
                 )
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                if reverse_url not in names_list:
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
+                else:
+                    if reverse_url == "posts:post_delete":
+                        self.assertRedirects(
+                            response,
+                            reverse(
+                                "posts:profile",
+                                args=(StaticURLTests.user.username,),
+                            ),
+                        )
+                    else:
+                        self.assertRedirects(
+                            response, reverse("posts:profile", args=argument)
+                        )
 
     def test_urls_access_another_user(self):
         """URL-адреса доступные для другого пользователя."""
-        for reverse_url, argument, _ in self.urls_names:
+        names_list = [
+            "posts:post_edit",
+            "posts:post_delete",
+            "posts:add_comment",
+            "posts:profile_follow",
+            "posts:profile_unfollow",
+        ]
+        for reverse_url, argument, _ in self.urls_names[:-1]:
             with self.subTest(reverse_url=reverse_url):
                 response = self.another_authorized_client.get(
                     reverse(reverse_url, args=argument)
                 )
-                if reverse_url == "posts:post_edit":
-                    self.assertRedirects(
-                        response, reverse("posts:post_detail", args=argument)
-                    )
-                else:
+                if reverse_url not in names_list:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
+                else:
+                    if reverse_url in names_list[:2]:
+                        self.assertRedirects(
+                            response,
+                            reverse("posts:post_detail", args=argument),
+                        )
+                    else:
+                        self.assertIn(
+                            response.status_code,
+                            [HTTPStatus.NOT_FOUND, HTTPStatus.FOUND],
+                        )
+
+    def test_url_add_comment(self):
+        """Страница добавления комментария доступна для
+        авторизованного пользователя."""
+        response = self.authorized_client.post(
+            reverse("posts:add_comment", args=(self.post.id,)),
+            {"text": "Test comment"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        response = self.another_authorized_client.post(
+            reverse("posts:add_comment", args=(self.post.id,)),
+            {"text": "Test comment"},
+        )
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_urls_access_guest(self):
         """URL-адреса доступны для неавторизованного пользователя."""
-        names_list = ["posts:post_edit", "posts:post_create"]
-        reverse_login = reverse('users:login')
+        names_list = [
+            "posts:post_edit",
+            "posts:post_create",
+            "posts:post_delete",
+            "posts:add_comment",
+            "posts:follow_index",
+            "posts:profile_follow",
+            "posts:profile_unfollow",
+        ]
+        reverse_login = reverse("users:login")
         for reverse_url, argument, _ in self.urls_names:
             response = self.client.get(reverse(reverse_url, args=argument))
             if reverse_url not in names_list:
@@ -112,5 +190,5 @@ class StaticURLTests(TestCase):
                     self.assertEqual(response.status_code, HTTPStatus.OK)
             else:
                 url_argument = reverse(reverse_url, args=argument)
-                excepted_redirect = f'{reverse_login}?next={url_argument}'
+                excepted_redirect = f"{reverse_login}?next={url_argument}"
                 self.assertRedirects(response, excepted_redirect)
