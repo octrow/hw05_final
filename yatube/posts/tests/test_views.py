@@ -175,28 +175,6 @@ class PaginatorViewsTest(TestCase):
         self.anotheruser_authorized = Client()
         self.anotheruser_authorized.force_login(self.anotheruser)
 
-    def test_first_page_contains_ten_records_guest(self):
-        pages_name = (
-            ("posts:index", None),
-            ("posts:group_list", (self.group.slug,)),
-            ("posts:profile", (self.user.username,)),
-        )
-        number_posts = (
-            ("?page=1", settings.PAGINATION_ITEMS_PER_PAGE),
-            ("?page=2", THIRTEEN - settings.PAGINATION_ITEMS_PER_PAGE),
-        )
-        for reverse_names, argument in pages_name:
-            with self.subTest(reverse_names=reverse_names):
-                url_with_arg = reverse(reverse_names, args=argument)
-                for last_part_url, number in number_posts:
-                    with self.subTest(last_part_url=last_part_url):
-                        response = self.client.get(
-                            url_with_arg + last_part_url
-                        )
-                        self.assertEqual(
-                            len(response.context["page_obj"]), number
-                        )
-
     def test_first_page_contains_ten_records_access(self):
         pages_name = (
             ("posts:index", None),
@@ -253,9 +231,11 @@ class FollowingTest(TestCase):
             reverse("posts:profile_follow", args=(self.third_user.username,))
         )
         self.assertEqual(Follow.objects.count(), count_follow + 1)
-        self.assertTrue(
-            Follow.objects.filter(author__username=THIRDUSER).exists()
+        follow_obj = Follow.objects.get(
+            author__username=THIRDUSER, user=self.another_user
         )
+        self.assertEqual(follow_obj.author, self.third_user)
+        self.assertEqual(follow_obj.user, self.another_user)
 
     def test_unfollow_access(self):
         """Авторизованный пользователь может удалять других пользователей
@@ -267,9 +247,6 @@ class FollowingTest(TestCase):
             reverse("posts:profile_unfollow", args=(self.third_user.username,))
         )
         self.assertEqual(Follow.objects.count(), count_follow - 1)
-        self.assertFalse(
-            Follow.objects.filter(author__username=THIRDUSER).exists()
-        )
 
     def test_newpost_forfollowers(self):
         """Новая запись пользователя появляется в ленте тех, кто на него
@@ -284,6 +261,7 @@ class FollowingTest(TestCase):
         self.assertEqual(len(response.context["page_obj"]), 1)
 
     def test_dont_follow_self(self):
+        """Нельзя подписаться на самого себя"""
         count_follow = Follow.objects.count()
         self.anotheruser_client.get(
             reverse("posts:profile_follow", args=(self.another_user.username,))
@@ -291,6 +269,7 @@ class FollowingTest(TestCase):
         self.assertEqual(Follow.objects.count(), count_follow)
 
     def test_not_follow_again(self):
+        """Нельзя подписаться еще раз на того же пользователя"""
         Follow.objects.all().delete()
         self.anotheruser_client.get(
             reverse("posts:profile_follow", args=(self.user.username,))

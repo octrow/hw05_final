@@ -16,19 +16,19 @@
       </p>
     </div>
   </section>
-  {% include 'posts/includes/switcher.html' %}
-  {% load cache %}
-  {% cache 30 sidebar index page_obj.number %}
-    <div class="album py-5 bg-light">
-      <div class="container py-2">
-        <div class="row" data-masonry='{"percentPosition": true }'>
+  {% include 'posts/includes/switcher.html' with index=True %}
+  <div class="album py-5 bg-light">
+    <div class="container py-2">
+      <div class="row" data-masonry='{"percentPosition": true }'>
+        {% load cache %}
+        {% cache 30 sidebar index page_obj.number %}
           {% for post in page_obj %}
             {% include 'posts/includes/post_card.html' %}
                 <!-- Не используем <hr> из-за собственной сетки постов -->
           {% endfor %}
-  {% endcache %}
-  {% include 'posts/includes/paginator.html' %}
-  </div>
-  </div>
+        {% endcache %}
+        {% include 'posts/includes/paginator.html' %}
+      </div>
+    </div>
   </div>
 {% endblock %}

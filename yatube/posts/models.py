@@ -27,7 +27,6 @@ class Post(CreatedModel):
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
-        related_name="posts",
         verbose_name="Группа",
         help_text="Группа, к которой будет относиться пост",
     )
@@ -36,27 +35,20 @@ class Post(CreatedModel):
     class Meta(CreatedModel.Meta):
         verbose_name = ("Пост",)
         verbose_name_plural = "Посты"
+        default_related_name = "posts"
 
 
 class Comment(CreatedModel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        field = self._meta.get_field("author")
-        field.verbose_name = "Автор комментария"
-
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
-        related_name="comments",
         verbose_name="Пост",
     )
 
     class Meta(CreatedModel.Meta):
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
-
-    def __str__(self):
-        return f"{self.text[:15]}... "
+        default_related_name = "comments"
 
 
 class Follow(models.Model):

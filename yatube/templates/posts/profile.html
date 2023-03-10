@@ -5,8 +5,8 @@
     {{ profile }}
     <h1 class="text-center my-3">Все посты пользователя {{ author.username }}</h1>
     <h5 class="text-center my-3">Всего постов: {{ post_count }}</h5>
-    <h5 class="text-center my-3">Количество подписок: {{ following_count }}</h5>
-    <h5 class="text-center my-3">Количество подписчиков: {{ followers_count }}</h5>
+    <h5 class="text-center my-3">Количество подписок: {{ author.follower.count }}</h5>
+    <h5 class="text-center my-3">Количество подписчиков: {{ author.following.count }}</h5>
     {% if user.is_authenticated and user != author %}
       {% if following %}
         <a
