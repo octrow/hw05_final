@@ -231,9 +231,7 @@ class FollowingTest(TestCase):
             reverse("posts:profile_follow", args=(self.third_user.username,))
         )
         self.assertEqual(Follow.objects.count(), count_follow + 1)
-        follow_obj = Follow.objects.get(
-            author__username=THIRDUSER, user=self.another_user
-        )
+        follow_obj = Follow.objects.first()
         self.assertEqual(follow_obj.author, self.third_user)
         self.assertEqual(follow_obj.user, self.another_user)
 
